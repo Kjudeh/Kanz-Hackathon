@@ -24,3 +24,8 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Stray images / screenshots dropped into the folder
+*.jpg
+*.jpeg
+Screenshot*.png
