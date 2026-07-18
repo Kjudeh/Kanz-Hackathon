@@ -55,7 +55,12 @@
   .who { font-weight:600; } .role { color:var(--muted); font-size:13px; }
   .meta { margin-inline-start:auto; text-align:end; }
   .badge { font-size:11px; font-weight:700; padding:3px 9px; border-radius:20px; }
-  .badge.cv { background:#e4f5ef; color:var(--emerald); } .badge.wip { background:#fef3e2; color:#b46b00; }
+  .badge.cv { background:#e4f5ef; color:var(--emerald); }
+  .cvlink { display:inline-block; font-size:11px; font-weight:700; color:var(--blue);
+            text-decoration:none; border:1px solid var(--blue); padding:2px 8px;
+            border-radius:20px; margin-inline-start:6px; }
+  .cvlink:hover { background:var(--blue); color:#fff; }
+ .badge.wip { background:#fef3e2; color:#b46b00; }
   .when { color:#9aa5b1; font-size:11px; margin-top:3px; }
 
   .foot { margin-top:22px; color:#9aa5b1; font-size:12px; display:flex; gap:8px; align-items:center; }
@@ -124,13 +129,13 @@
     ar: { dir:"rtl", sub:"لوحة الأثر — سِيَر ذاتية صوتية على واتساب", tagA:"كل سطر هنا شخصٌ أصبح", tagB:"قابلاً للتوظيف",
           heroLbl:"شخصاً لديهم سيرة ذاتية احترافية اليوم، لم تكن لديهم من قبل ناطق.",
           reached:"عدد المستفيدين", cvs:"سِيَر ذاتية أُنشئت", rate:"نسبة الإكمال",
-          trades:"المهن الممثّلة", newest:"أحدث الملفات", cvReady:"السيرة جاهزة", inProgress:"قيد الإنجاز",
+          trades:"المهن الممثّلة", newest:"أحدث الملفات", cvReady:"السيرة جاهزة", inProgress:"قيد الإنجاز", openCv:"عرض السيرة",
           live:"تُقرأ مباشرة من Supabase", refresh:"↻ تحديث", lang:"English",
           note:"لقطة محفوظة (تعذّر التحديث المباشر الآن).", m:"منذ", min:"د", hr:"س", day:"ي" },
     en: { dir:"ltr", sub:"Impact Dashboard — voice-first CVs on WhatsApp", tagA:"Every row is a person who is now", tagB:"matchable",
           heroLbl:"people have a professional CV today who didn't before Naatiq.",
           reached:"People reached", cvs:"CVs generated", rate:"Completion rate",
-          trades:"Trades represented", newest:"Newest profiles", cvReady:"CV ready", inProgress:"In progress",
+          trades:"Trades represented", newest:"Newest profiles", cvReady:"CV ready", inProgress:"In progress", openCv:"Open CV",
           live:"Reads live from Supabase", refresh:"↻ Refresh", lang:"عربي",
           note:"Showing a saved snapshot (live refresh unavailable).", m:"", min:"m ago", hr:"h ago", day:"d ago" }
   };
@@ -138,6 +143,7 @@
     "Security Guard":"حارس أمن","Cook":"طاهٍ","Electrician":"كهربائي","Hairdresser":"مصفّف شعر",
     "Plumber":"سبّاك","Painter":"دهّان","Delivery Rider":"موصّل طلبات" };
 
+  const CV_BASE = SUPABASE_URL + "/storage/v1/object/public/cvs/";
   let lang = "ar", DATA = SNAPSHOT, isLive = false, chart;
   function tradeLabel(t){ return lang==="ar" ? (TRADE_AR[t]||t) : t; }
   function fmtAgo(iso){
@@ -184,6 +190,9 @@
     document.getElementById("feed").innerHTML = (DATA.profiles||[]).map(function(p){
       var name=(p.first_name||"—"), init=name.charAt(0).toUpperCase();
       var badge = p.has_cv ? '<span class="badge cv">'+L.cvReady+'</span>' : '<span class="badge wip">'+L.inProgress+'</span>';
+      if (p.has_cv && p.cv_pdf_path) {
+        badge += ' <a class="cvlink" href="'+CV_BASE+p.cv_pdf_path+'" target="_blank" rel="noopener">'+L.openCv+'</a>';
+      }
       return '<div class="row"><div class="av">'+init+'</div><div><div class="who">'+name+
              '</div><div class="role">'+tradeLabel(p.role_trade)+'</div></div>'+
              '<div class="meta">'+badge+'<div class="when">'+fmtAgo(p.created_at)+'</div></div></div>';
