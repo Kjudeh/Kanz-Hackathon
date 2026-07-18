@@ -26,7 +26,6 @@ export async function callClaude(opts: {
     body: JSON.stringify({
       model: env.ANTHROPIC_MODEL,
       max_tokens: opts.maxTokens ?? 1024,
-      temperature: opts.temperature ?? 0.4,
       system: opts.system,
       messages: opts.messages,
     }),
