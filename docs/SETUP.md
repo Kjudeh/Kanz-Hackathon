@@ -1,11 +1,11 @@
 # Setup — accounts, keys, and configuration
 
-Wathefti runs on free tiers. Secrets go into **Supabase Edge Function secrets** (never
+Naatiq runs on free tiers. Secrets go into **Supabase Edge Function secrets** (never
 committed to git). Copy `.env.example` → `.env` for local reference; `.env` is gitignored.
 
 ## Supabase — done ✅
 
-- Project: **Wathefti** (`pehlozswmyxocwznyjzp`, `eu-west-2`)
+- Project ref: `pehlozswmyxocwznyjzp` (`eu-west-2`)
 - API URL: `https://pehlozswmyxocwznyjzp.supabase.co`
 - Schema, RLS, Storage buckets (`voice-notes`, `cvs`), and dashboard views are applied.
 - Publishable (client-safe) key is used by the dashboard; the service-role key is used

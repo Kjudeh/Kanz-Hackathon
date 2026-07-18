@@ -1,8 +1,8 @@
-# Wathefti (وظيفتي)
+# ناطق (Naatiq)
 
 **A voice-first WhatsApp career agent for workers the CV economy leaves behind.**
 
-Wathefti turns a spoken WhatsApp conversation, in the user's own Arabic dialect, into a
+Naatiq turns a spoken WhatsApp conversation, in the user's own Arabic dialect, into a
 professional, bilingual (Arabic + English) PDF CV — no app to install, no forms, no
 literacy or typing barrier. It then offers job-category matching and mock-interview
 practice, all inside one WhatsApp thread.
@@ -22,7 +22,7 @@ See [`Wathefti_PRD.md`](./Wathefti_PRD.md) for the full product spec.
 | Messaging | Twilio WhatsApp Sandbox | WhatsApp in/out |
 | Dashboard | Cowork + Supabase | impact visualization |
 
-Supabase project: **Wathefti** — ref `pehlozswmyxocwznyjzp`, region `eu-west-2`.
+Supabase project ref `pehlozswmyxocwznyjzp`, region `eu-west-2`.
 
 ## Repo layout
 
