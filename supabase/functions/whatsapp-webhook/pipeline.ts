@@ -8,8 +8,10 @@ import {
 import { downloadTwilioMedia, sendWhatsApp } from "./twilio.ts";
 import { transcribeAudio } from "./groq.ts";
 import { runInterviewer } from "./interviewer.ts";
+import { synthesizeArabic, voiceRepliesEnabled } from "./tts.ts";
 import { getEnv } from "./env.ts";
 import type { Inbound } from "./types.ts";
+import type { SupabaseClient } from "jsr:@supabase/supabase-js@2";
 
 export async function processInbound(
   inbound: Inbound,
@@ -60,8 +62,32 @@ export async function processInbound(
     if (!opts.returnReply) await invokeGenerateCv(user.id);
   }
 
-  if (!opts.returnReply) await sendWhatsApp(inbound.from, result.reply_ar);
+  if (!opts.returnReply) await deliverReply(supa, inbound.from, user.id, result.reply_ar);
   return result.reply_ar;
+}
+
+// Send the reply as text, and — if voice replies are enabled — also as an Arabic
+// voice note (TTS -> Storage -> signed URL -> WhatsApp media), for a voice-native
+// experience. Voice failures never block the text reply.
+async function deliverReply(
+  supa: SupabaseClient, to: string, userId: string, text: string,
+): Promise<void> {
+  await sendWhatsApp(to, text);
+  if (!voiceRepliesEnabled()) return;
+  try {
+    const audio = await synthesizeArabic(text);
+    if (!audio) return;
+    const path = `replies/${userId}/${crypto.randomUUID()}.mp3`;
+    const up = await supa.storage.from("voice-replies").upload(path, audio.bytes, {
+      contentType: audio.contentType,
+      upsert: true,
+    });
+    if (up.error) { console.error("[voice-reply upload]", up.error); return; }
+    const signed = await supa.storage.from("voice-replies").createSignedUrl(path, 3600);
+    if (signed.data?.signedUrl) await sendWhatsApp(to, "", signed.data.signedUrl);
+  } catch (e) {
+    console.error("[voice-reply]", e);
+  }
 }
 
 // Fire the CV generation function (server-to-server, service-role auth). It acks

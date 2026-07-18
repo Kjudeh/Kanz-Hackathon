@@ -13,6 +13,11 @@ export interface Env {
   TWILIO_WHATSAPP_FROM: string;
   VALIDATE_TWILIO_SIGNATURE: string;
   WATHEFTI_TEST_SECRET: string;
+  // Voice replies (Phase 5, optional)
+  ELEVENLABS_API_KEY: string;
+  ELEVENLABS_VOICE_ID: string;
+  ELEVENLABS_MODEL: string;
+  WATHEFTI_VOICE_REPLIES: string;
 }
 
 export function getEnv(): Env {
@@ -30,5 +35,9 @@ export function getEnv(): Env {
     TWILIO_WHATSAPP_FROM: g("TWILIO_WHATSAPP_FROM"),
     VALIDATE_TWILIO_SIGNATURE: g("VALIDATE_TWILIO_SIGNATURE", "false"),
     WATHEFTI_TEST_SECRET: g("WATHEFTI_TEST_SECRET"),
+    ELEVENLABS_API_KEY: g("ELEVENLABS_API_KEY"),
+    ELEVENLABS_VOICE_ID: g("ELEVENLABS_VOICE_ID"),
+    ELEVENLABS_MODEL: g("ELEVENLABS_MODEL", "eleven_multilingual_v2"),
+    WATHEFTI_VOICE_REPLIES: g("WATHEFTI_VOICE_REPLIES", "false"),
   };
 }

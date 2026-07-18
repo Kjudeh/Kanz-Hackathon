@@ -65,7 +65,7 @@ export async function sendWhatsApp(to: string, body: string, mediaUrl?: string):
   const form = new URLSearchParams();
   form.set("To", to);
   form.set("From", env.TWILIO_WHATSAPP_FROM);
-  form.set("Body", body);
+  if (body) form.set("Body", body);
   if (mediaUrl) form.set("MediaUrl", mediaUrl);
 
   const res = await fetch(
