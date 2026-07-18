@@ -1,4 +1,4 @@
-// Wathefti — WhatsApp inbound webhook (Twilio) + interview orchestration.
+// Naatiq — WhatsApp inbound webhook (Twilio) + interview orchestration.
 //
 // Deployed with verify_jwt = false: Twilio cannot send a Supabase JWT, so this
 // function does its own auth (optional Twilio signature validation) instead.
@@ -10,6 +10,7 @@
 import { getEnv } from "./env.ts";
 import { parseTwilioForm, validateTwilioSignature } from "./twilio.ts";
 import { processInbound } from "./pipeline.ts";
+import { callClaude } from "./anthropic.ts";
 
 declare const EdgeRuntime:
   | { waitUntil(p: Promise<unknown>): void }
@@ -24,7 +25,34 @@ Deno.serve(async (req: Request) => {
 
   // Health check — lets us confirm the deployment is reachable without secrets.
   if (req.method === "GET") {
-    return new Response("Wathefti webhook is running.", { status: 200 });
+    // Diagnostic self-test: GET ?selftest=<WATHEFTI_TEST_SECRET>
+    // Reports which integrations are configured and pings Claude, so failures are
+    // visible without digging through console logs.
+    const selftest = url.searchParams.get("selftest");
+    if (selftest && env.WATHEFTI_TEST_SECRET && selftest === env.WATHEFTI_TEST_SECRET) {
+      const result: Record<string, unknown> = {
+        model: env.ANTHROPIC_MODEL,
+        anthropic_key_set: !!env.ANTHROPIC_API_KEY,
+        groq_key_set: !!env.GROQ_API_KEY,
+        twilio_configured: !!(env.TWILIO_ACCOUNT_SID && env.TWILIO_AUTH_TOKEN && env.TWILIO_WHATSAPP_FROM),
+        voice_replies: env.WATHEFTI_VOICE_REPLIES === "true",
+      };
+      try {
+        const t = await callClaude({
+          system: "Reply with the single word OK.",
+          messages: [{ role: "user", content: "ping" }],
+          maxTokens: 16,
+        });
+        result.anthropic = "OK: " + t.slice(0, 60);
+      } catch (e) {
+        result.anthropic = "ERROR: " + (e instanceof Error ? e.message : String(e));
+      }
+      return new Response(JSON.stringify(result, null, 2), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    }
+    return new Response("Naatiq webhook is running.", { status: 200 });
   }
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });

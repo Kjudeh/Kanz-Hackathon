@@ -27,7 +27,7 @@ export function getEnv(): Env {
     SUPABASE_SERVICE_ROLE_KEY: g("SUPABASE_SERVICE_ROLE_KEY"),
     ANTHROPIC_API_KEY: g("ANTHROPIC_API_KEY"),
     // Set to the current Sonnet model string for your account (see docs/SETUP.md).
-    ANTHROPIC_MODEL: g("ANTHROPIC_MODEL", "claude-sonnet-4-20250514"),
+    ANTHROPIC_MODEL: g("ANTHROPIC_MODEL", "claude-sonnet-5"),
     GROQ_API_KEY: g("GROQ_API_KEY"),
     GROQ_MODEL: g("GROQ_MODEL", "whisper-large-v3"),
     TWILIO_ACCOUNT_SID: g("TWILIO_ACCOUNT_SID"),
