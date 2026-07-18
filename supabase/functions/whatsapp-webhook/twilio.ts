@@ -61,10 +61,16 @@ export async function sendWhatsApp(to: string, body: string, mediaUrl?: string):
     console.error("[twilio] not configured; would send to", to, "->", body);
     return;
   }
+  // Twilio requires the whatsapp: prefix on both ends; add it defensively.
+  const from = env.TWILIO_WHATSAPP_FROM.startsWith("whatsapp:")
+    ? env.TWILIO_WHATSAPP_FROM
+    : `whatsapp:${env.TWILIO_WHATSAPP_FROM}`;
+  const dest = to.startsWith("whatsapp:") ? to : `whatsapp:${to}`;
+
   const auth = btoa(`${env.TWILIO_ACCOUNT_SID}:${env.TWILIO_AUTH_TOKEN}`);
   const form = new URLSearchParams();
-  form.set("To", to);
-  form.set("From", env.TWILIO_WHATSAPP_FROM);
+  form.set("To", dest);
+  form.set("From", from);
   if (body) form.set("Body", body);
   if (mediaUrl) form.set("MediaUrl", mediaUrl);
 

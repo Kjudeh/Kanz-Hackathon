@@ -8,7 +8,7 @@
 // EdgeRuntime.waitUntil, so we never brush Twilio's ~15s webhook timeout.
 
 import { getEnv } from "./env.ts";
-import { parseTwilioForm, validateTwilioSignature } from "./twilio.ts";
+import { parseTwilioForm, validateTwilioSignature, sendWhatsApp } from "./twilio.ts";
 import { processInbound } from "./pipeline.ts";
 import { callClaude } from "./anthropic.ts";
 
@@ -34,8 +34,12 @@ Deno.serve(async (req: Request) => {
         model: env.ANTHROPIC_MODEL,
         anthropic_key_set: !!env.ANTHROPIC_API_KEY,
         groq_key_set: !!env.GROQ_API_KEY,
-        twilio_configured: !!(env.TWILIO_ACCOUNT_SID && env.TWILIO_AUTH_TOKEN && env.TWILIO_WHATSAPP_FROM),
+        twilio_from: env.TWILIO_WHATSAPP_FROM,
+        twilio_from_has_prefix: env.TWILIO_WHATSAPP_FROM.startsWith("whatsapp:"),
+        twilio_sid_prefix: env.TWILIO_ACCOUNT_SID.slice(0, 6),
         voice_replies: env.WATHEFTI_VOICE_REPLIES === "true",
+        elevenlabs_key_set: !!env.ELEVENLABS_API_KEY,
+        elevenlabs_voice_id: env.ELEVENLABS_VOICE_ID || "(using default)",
       };
       try {
         const t = await callClaude({
@@ -47,6 +51,17 @@ Deno.serve(async (req: Request) => {
       } catch (e) {
         result.anthropic = "ERROR: " + (e instanceof Error ? e.message : String(e));
       }
+      // Live outbound test: &sendto=whatsapp:+<number>
+      const sendto = url.searchParams.get("sendto");
+      if (sendto) {
+        try {
+          await sendWhatsApp(sendto, "Naatiq test message ✅");
+          result.twilio_send = "OK (sent to " + sendto + ")";
+        } catch (e) {
+          result.twilio_send = "ERROR: " + (e instanceof Error ? e.message : String(e));
+        }
+      }
+
       return new Response(JSON.stringify(result, null, 2), {
         status: 200,
         headers: { "content-type": "application/json" },

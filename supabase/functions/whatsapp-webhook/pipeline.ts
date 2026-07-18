@@ -57,12 +57,14 @@ export async function processInbound(
 
   await logConversation(supa, user.id, "outbound", "text", result.reply_ar);
 
+  // Deliver BEFORE triggering CV generation, so a CV failure can never block the reply.
+  if (!opts.returnReply) await deliverReply(supa, inbound.from, user.id, result.reply_ar);
+
   if (result.profile_complete && user.state === "interviewing") {
     await setUserState(supa, user.id, "profile_complete");
     if (!opts.returnReply) await invokeGenerateCv(user.id);
   }
 
-  if (!opts.returnReply) await deliverReply(supa, inbound.from, user.id, result.reply_ar);
   return result.reply_ar;
 }
 
@@ -72,7 +74,13 @@ export async function processInbound(
 async function deliverReply(
   supa: SupabaseClient, to: string, userId: string, text: string,
 ): Promise<void> {
-  await sendWhatsApp(to, text);
+  // Text first, and never let a send error abort the rest of the pipeline.
+  try {
+    await sendWhatsApp(to, text);
+  } catch (e) {
+    console.error("[send text]", e);
+  }
+
   if (!voiceRepliesEnabled()) return;
   try {
     const audio = await synthesizeArabic(text);
