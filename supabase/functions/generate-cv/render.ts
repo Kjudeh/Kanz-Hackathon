@@ -20,11 +20,16 @@ async function renderGotenberg(base: string, html: string): Promise<Uint8Array> 
   form.append("marginLeft", "0");
   form.append("marginRight", "0");
   // Give Chromium a moment for the web fonts to load before printing.
-  form.append("waitDelay", "1s");
+  form.append("waitDelay", "2s");
 
-  const url = base.replace(/\/$/, "") + "/forms/chromium/convert/html";
+  // Accept a bare host (Railway/Fly display it without a scheme) as well as a full URL.
+  const root = /^https?:\/\//i.test(base.trim()) ? base.trim() : `https://${base.trim()}`;
+  const url = root.replace(/\/+$/, "") + "/forms/chromium/convert/html";
+
   const res = await fetch(url, { method: "POST", body: form });
-  if (!res.ok) throw new Error(`Gotenberg ${res.status}: ${await res.text()}`);
+  if (!res.ok) {
+    throw new Error(`Gotenberg ${res.status} at ${url}: ${(await res.text()).slice(0, 300)}`);
+  }
   return new Uint8Array(await res.arrayBuffer());
 }
 

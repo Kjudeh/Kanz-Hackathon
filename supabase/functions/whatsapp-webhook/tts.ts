@@ -18,7 +18,7 @@ export async function synthesizeArabic(
   // ELEVENLABS_VOICE_ID; the default below is a generic multilingual voice.
   const voiceId = env.ELEVENLABS_VOICE_ID || "21m00Tcm4TlvDq8ikWAM";
 
-  try {
+  {
     const res = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`,
       {
@@ -36,12 +36,9 @@ export async function synthesizeArabic(
       },
     );
     if (!res.ok) {
-      console.error("[tts] ElevenLabs", res.status, await res.text());
-      return null;
+      const t = await res.text();
+      throw new Error(`ElevenLabs ${res.status}: ${t.slice(0, 300)}`);
     }
     return { bytes: new Uint8Array(await res.arrayBuffer()), contentType: "audio/mpeg" };
-  } catch (e) {
-    console.error("[tts]", e);
-    return null;
   }
 }
