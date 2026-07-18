@@ -1,0 +1,20 @@
+# Fly.io deploy for Gotenberg (alternative to Railway).
+#   fly launch --no-deploy --copy-config --name naatiq-gotenberg
+#   fly deploy
+app = "naatiq-gotenberg"
+primary_region = "cdg"   # Paris — close to the eu-west-2 Supabase project; change if you like
+
+[build]
+  image = "gotenberg/gotenberg:8"
+
+[http_service]
+  internal_port = 3000     # Gotenberg's default API port
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 512
