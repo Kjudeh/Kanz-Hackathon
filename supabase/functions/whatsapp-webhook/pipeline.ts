@@ -8,6 +8,7 @@ import {
 import { downloadTwilioMedia, sendWhatsApp } from "./twilio.ts";
 import { transcribeAudio } from "./groq.ts";
 import { runInterviewer } from "./interviewer.ts";
+import { getEnv } from "./env.ts";
 import type { Inbound } from "./types.ts";
 
 export async function processInbound(
@@ -56,10 +57,28 @@ export async function processInbound(
 
   if (result.profile_complete && user.state === "interviewing") {
     await setUserState(supa, user.id, "profile_complete");
-    console.log(`[state] user ${user.id} -> profile_complete (CV generation lands in Phase 3)`);
-    // Phase 3: invoke the generate-cv Edge Function here.
+    if (!opts.returnReply) await invokeGenerateCv(user.id);
   }
 
   if (!opts.returnReply) await sendWhatsApp(inbound.from, result.reply_ar);
   return result.reply_ar;
+}
+
+// Fire the CV generation function (server-to-server, service-role auth). It acks
+// fast (202) and renders the PDF in its own background task.
+async function invokeGenerateCv(userId: string): Promise<void> {
+  const env = getEnv();
+  try {
+    const res = await fetch(`${env.SUPABASE_URL}/functions/v1/generate-cv`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+      },
+      body: JSON.stringify({ user_id: userId }),
+    });
+    if (!res.ok) console.error("[invokeGenerateCv]", res.status, await res.text());
+  } catch (e) {
+    console.error("[invokeGenerateCv]", e);
+  }
 }

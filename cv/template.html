@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  /* Production fonts. The preview renderer swaps this line for local files so it
+     can render offline; Gotenberg/Chromium fetches these fine in production.
+     For a fully offline production build, embed the fonts as base64 instead. */
+  @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;600;700&family=Lato:wght@400;700&display=swap');
+
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Lato', sans-serif;
+    color: #1f2933;
+    font-size: 13px;
+    line-height: 1.5;
+    -weasy-hyphens: none;
+  }
+
+  .en { direction: ltr; text-align: left; }
+  .ar { direction: rtl; text-align: right; font-family: 'Cairo', sans-serif; }
+
+  /* Header band */
+  .header { background: #0f4c5c; color: #fff; padding: 26px 40px 22px; }
+  .names { display: flex; justify-content: space-between; align-items: baseline; gap: 20px; }
+  .name-en { font-size: 30px; font-weight: 700; letter-spacing: .2px; }
+  .name-ar { font-size: 30px; font-weight: 700; font-family: 'Cairo', sans-serif; }
+  .roles { display: flex; justify-content: space-between; gap: 20px; margin-top: 4px;
+           color: #cfe3e7; font-size: 14.5px; }
+  .role-ar { font-family: 'Cairo', sans-serif; }
+  .contact { margin-top: 14px; font-size: 12.5px; color: #e8f1f2;
+             border-top: 1px solid rgba(255,255,255,.18); padding-top: 10px; }
+
+  /* Two-language body */
+  .body { display: flex; }
+  .col { flex: 1; padding: 22px 40px 8px; }
+  .col-en { border-right: 1px solid #e5e7eb; }
+
+  h2 { font-size: 12.5px; font-weight: 700; text-transform: uppercase;
+       letter-spacing: .06em; color: #0f4c5c;
+       border-bottom: 2px solid #0f4c5c; padding-bottom: 4px; margin: 16px 0 9px; }
+  .ar h2 { text-transform: none; letter-spacing: 0; font-size: 15px; }
+  section:first-child h2 { margin-top: 0; }
+
+  p.summary { margin: 0; color: #3e4c59; }
+
+  .entry { margin-bottom: 9px; }
+  .entry .org { font-weight: 700; color: #1f2933; }
+  .entry .dur { color: #616e7c; font-size: 12px; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+  .ar .chips { justify-content: flex-start; }
+  .chip { background: #e8f1f2; color: #0f4c5c; border-radius: 12px;
+          padding: 3px 11px; font-size: 12px; white-space: nowrap; }
+
+  .footer { text-align: center; color: #9aa5b1; font-size: 10.5px;
+            padding: 12px; border-top: 1px solid #e5e7eb; margin-top: 8px; }
+  .footer .brand { color: #0f4c5c; font-weight: 700; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div class="names">
+      <div class="name-en en">{{NAME_EN}}</div>
+      <div class="name-ar ar">{{NAME_AR}}</div>
+    </div>
+    <div class="roles">
+      <div class="role-en en">{{ROLE_EN}}</div>
+      <div class="role-ar ar">{{ROLE_AR}}</div>
+    </div>
+    <div class="contact">{{PHONE}}</div>
+  </div>
+
+  <div class="body">
+    <div class="col col-en en">{{COL_EN}}</div>
+    <div class="col col-ar ar">{{COL_AR}}</div>
+  </div>
+
+  <div class="footer">{{FOOTER}}</div>
+</body>
+</html>
