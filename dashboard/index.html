@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Wathefti · Impact Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root {
+    --teal: #0f4c5c; --teal-600:#0d6b7d; --ink:#1f2933; --muted:#616e7c;
+    --bg:#eef2f3; --card:#ffffff; --line:#e1e8ea; --good:#1f9d6b; --chip:#e8f1f2;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+         background:var(--bg); color:var(--ink); }
+  .wrap { max-width:1060px; margin:0 auto; padding:28px 20px 60px; }
+  header.top { display:flex; justify-content:space-between; align-items:flex-end;
+               flex-wrap:wrap; gap:12px; margin-bottom:6px; }
+  .brand { font-size:26px; font-weight:800; color:var(--teal); letter-spacing:.3px; }
+  .brand .ar { font-weight:800; }
+  .sub { color:var(--muted); font-size:14px; margin-top:2px; }
+  .tagline { font-size:15px; color:var(--teal-600); font-weight:600; margin:14px 0 22px; }
+  .refresh { border:1px solid var(--teal); background:#fff; color:var(--teal);
+             border-radius:8px; padding:8px 14px; font-size:13px; font-weight:600; cursor:pointer; }
+  .refresh:hover { background:var(--teal); color:#fff; }
+
+  .hero { background:linear-gradient(135deg,var(--teal),var(--teal-600)); color:#fff;
+          border-radius:16px; padding:30px 34px; box-shadow:0 8px 26px rgba(15,76,92,.22);
+          display:flex; align-items:center; gap:26px; flex-wrap:wrap; }
+  .hero .num { font-size:76px; font-weight:800; line-height:1; }
+  .hero .lbl { font-size:18px; max-width:460px; opacity:.95; }
+
+  .cards { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:18px 0; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px 22px; }
+  .card .k { font-size:34px; font-weight:800; color:var(--teal); }
+  .card .t { color:var(--muted); font-size:13px; margin-top:4px; text-transform:uppercase; letter-spacing:.04em; }
+
+  .grid2 { display:grid; grid-template-columns:1.2fr 1fr; gap:16px; }
+  .panel { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:20px 22px; }
+  .panel h2 { margin:0 0 14px; font-size:14px; text-transform:uppercase; letter-spacing:.05em;
+              color:var(--teal); }
+
+  .feed { display:flex; flex-direction:column; gap:10px; max-height:340px; overflow:auto; }
+  .row { display:flex; align-items:center; gap:12px; padding:8px 0; border-bottom:1px solid var(--line); }
+  .row:last-child { border-bottom:none; }
+  .av { width:36px; height:36px; border-radius:50%; background:var(--chip); color:var(--teal);
+        display:flex; align-items:center; justify-content:center; font-weight:700; flex:0 0 auto; }
+  .row .who { font-weight:600; }
+  .row .role { color:var(--muted); font-size:13px; }
+  .row .meta { margin-left:auto; text-align:right; }
+  .badge { font-size:11px; font-weight:700; padding:3px 9px; border-radius:20px; }
+  .badge.cv { background:#e5f4ee; color:var(--good); }
+  .badge.wip { background:#fef3e2; color:#b46b00; }
+  .when { color:#9aa5b1; font-size:11px; margin-top:3px; }
+
+  .foot { margin-top:22px; color:#9aa5b1; font-size:12px; display:flex; gap:8px; align-items:center; }
+  .dot { width:8px; height:8px; border-radius:50%; background:var(--good); display:inline-block; }
+  .err { background:#fdecec; color:#b42318; border:1px solid #f6c9c6; padding:12px 16px;
+         border-radius:10px; margin:16px 0; font-size:14px; display:none; }
+  @media (max-width:760px){ .cards{grid-template-columns:1fr} .grid2{grid-template-columns:1fr}
+    .hero .num{font-size:60px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="brand"><span class="ar">وظيفتي</span> · Wathefti</div>
+      <div class="sub">Impact Dashboard — voice-first CVs on WhatsApp</div>
+    </div>
+    <button class="refresh" onclick="load()">↻ Refresh</button>
+  </header>
+  <div class="tagline">Every row is a person who is now <b>matchable</b>.</div>
+
+  <div class="err" id="err"></div>
+
+  <div class="hero">
+    <div class="num" id="hero-num">—</div>
+    <div class="lbl">people have a professional CV today<br>who didn't before Wathefti.</div>
+  </div>
+
+  <div class="cards">
+    <div class="card"><div class="k" id="k-reached">—</div><div class="t">People reached</div></div>
+    <div class="card"><div class="k" id="k-cvs">—</div><div class="t">CVs generated</div></div>
+    <div class="card"><div class="k" id="k-rate">—</div><div class="t">Completion rate</div></div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel">
+      <h2>Trades represented</h2>
+      <canvas id="chart" height="220"></canvas>
+    </div>
+    <div class="panel">
+      <h2>Newest profiles</h2>
+      <div class="feed" id="feed"></div>
+    </div>
+  </div>
+
+  <div class="foot"><span class="dot"></span> Reads live from Supabase · <span id="stamp"></span></div>
+</div>
+
+<script>
+  const SUPABASE_URL = "https://pehlozswmyxocwznyjzp.supabase.co";
+  // Public anon key — read-only, and only the safe dashboard views are exposed to it.
+  const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBlaGxvenN3bXl4b2N3em55anpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzMDk5MDEsImV4cCI6MjA5OTg4NTkwMX0.9FT9Ykf_EoemmFfpzPPXAYzj4XeEpD5PnEameaJUtcU";
+  const H = { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY };
+  let chart;
+
+  async function api(path){
+    const r = await fetch(SUPABASE_URL + "/rest/v1/" + path, { headers: H });
+    if(!r.ok) throw new Error(path + " → " + r.status);
+    return r.json();
+  }
+
+  function ago(iso){
+    const s = Math.max(1,(Date.now()-new Date(iso).getTime())/1000);
+    if(s<3600) return Math.floor(s/60)+"m ago";
+    if(s<86400) return Math.floor(s/3600)+"h ago";
+    return Math.floor(s/86400)+"d ago";
+  }
+
+  function renderFeed(rows){
+    document.getElementById("feed").innerHTML = rows.map(function(p){
+      var name=(p.first_name||"—"), init=name.charAt(0).toUpperCase();
+      var badge = p.has_cv ? '<span class="badge cv">CV ready</span>'
+                           : '<span class="badge wip">In progress</span>';
+      return '<div class="row"><div class="av">'+init+'</div>'+
+             '<div><div class="who">'+name+'</div><div class="role">'+(p.role_trade||"")+'</div></div>'+
+             '<div class="meta">'+badge+'<div class="when">'+ago(p.created_at)+'</div></div></div>';
+    }).join("");
+  }
+
+  function renderChart(trades){
+    var labels = trades.map(function(t){return t.role_trade;});
+    var data = trades.map(function(t){return t.cnt;});
+    if(chart) chart.destroy();
+    chart = new Chart(document.getElementById("chart"), {
+      type:"bar",
+      data:{ labels:labels, datasets:[{ data:data, backgroundColor:"#0f4c5c", borderRadius:6, maxBarThickness:34 }] },
+      options:{ indexAxis:"y", plugins:{legend:{display:false}},
+        scales:{ x:{ beginAtZero:true, ticks:{precision:0}, grid:{color:"#eef2f3"} }, y:{ grid:{display:false} } } }
+    });
+  }
+
+  async function load(){
+    var err=document.getElementById("err"); err.style.display="none";
+    try{
+      var stats=(await api("dashboard_stats"))[0]||{};
+      var trades=await api("dashboard_trade_distribution?order=cnt.desc");
+      var profiles=await api("dashboard_profiles?order=created_at.desc&limit=8");
+      document.getElementById("hero-num").textContent = stats.people_with_cv ?? 0;
+      document.getElementById("k-reached").textContent = stats.people_reached ?? 0;
+      document.getElementById("k-cvs").textContent = stats.total_cvs ?? 0;
+      var rate = stats.total_profiles ? Math.round(100*(stats.total_cvs/stats.total_profiles)) : 0;
+      document.getElementById("k-rate").textContent = rate + "%";
+      renderChart(trades);
+      renderFeed(profiles);
+      document.getElementById("stamp").textContent = new Date().toLocaleString();
+    }catch(e){
+      err.style.display="block";
+      err.textContent = "Could not load live data: " + e.message;
+    }
+  }
+  load();
+</script>
+</body>
+</html>

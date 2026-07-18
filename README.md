@@ -37,11 +37,12 @@ docs/                  setup + notes
 ## Status
 
 - [x] **Phase 0** — Supabase project, schema, RLS, Storage buckets, dashboard views
-- [ ] **Phase 1** — WhatsApp webhook Edge Function
-- [ ] **Phase 2** — Voice transcription + Claude interviewer
-- [ ] **Phase 3** — Bilingual CV PDF generation
-- [ ] **Phase 4** — Impact dashboard
+- [x] **Phase 1** — WhatsApp webhook Edge Function (`whatsapp-webhook`, deployed)
+- [x] **Phase 2** — Voice transcription (Groq Whisper) + Claude interviewer
+- [x] **Phase 3** — Bilingual CV PDF generation (`generate-cv`, deployed)
+- [x] **Phase 4** — Impact dashboard (`dashboard/index.html`, live via anon key)
 - [ ] **Phase 5** — Secondary features + polish
+- [ ] **Live test** — set Edge Function secrets + wire Twilio sandbox, redeploy webhook
 
 ## Setup
 
