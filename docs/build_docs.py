@@ -24,6 +24,9 @@ LOGO = ROOT.parent / "dashboard" / "assets" / "naatiq-logo.png"
 
 BRAND = {"navy": "#001737", "blue": "#0E52E5", "emerald": "#09A385"}
 
+# Credited on the cover of every generated document.
+TEAM = ["Karam Judeh", "Rahma Al Sharif", "Abderrahim Laghmari"]
+
 
 def logo_data_uri() -> str:
     im = Image.open(LOGO).convert("RGBA")
@@ -49,6 +52,8 @@ body { font-family: 'Lato','Cairo','Amiri','Segoe UI',Helvetica,Arial,sans-serif
                  letter-spacing: 1.4px; text-transform: uppercase; margin-top: 12px; }
 .cover h1 { font-size: 25pt; color: %(navy)s; margin: 4px 0 6px; line-height: 1.2; }
 .cover .sub { color: #5b6b82; font-size: 11pt; margin: 0; }
+.cover .team { margin: 10px 0 0; font-size: 9pt; color: #7b8794; }
+.cover .team b { color: %(navy)s; font-weight: 700; letter-spacing: .3px; }
 
 h2 { font-size: 14pt; color: %(navy)s; margin: 22px 0 8px;
      border-bottom: 2px solid %(blue)s; padding-bottom: 5px; }
@@ -88,6 +93,7 @@ TEMPLATE = """<!DOCTYPE html><html><head><meta charset="utf-8"><style>{css}</sty
     <div class="kicker">{kicker}</div>
     <h1>{title}</h1>
     <p class="sub">{subtitle}</p>
+    <p class="team"><b>Team</b> &nbsp;·&nbsp; {team}</p>
   </div>
   {body}
 </body></html>"""
@@ -125,6 +131,7 @@ def build():
             kicker="ناطق · Naatiq — documentation",
             title=title,
             subtitle=subtitle,
+            team=" &nbsp;·&nbsp; ".join(TEAM),
             body=body,
         )
         pdf = OUT / (f.stem + ".pdf")
