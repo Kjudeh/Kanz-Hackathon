@@ -33,9 +33,13 @@ curl -I https://<your-gotenberg-host>/health
 2. Note the sandbox number (typically `+1 415 523 8886`) and the join code.
 3. Set the **"When a message comes in"** webhook to the deployed webhook URL, method **POST**:
    `https://<project-ref>.functions.supabase.co/whatsapp-webhook`
-4. From any phone, WhatsApp the sandbox number with `join <your-code>` to opt in.
+4. From any phone, WhatsApp the sandbox number with `join <your-code>` to opt in. For this
+   deployment the code is **`join reach-sheep`**.
 
-The join code also belongs in the landing page CONFIG block in `web/index.html`.
+The join code also belongs in the landing page CONFIG block in `web/index.html`, where it
+pre-fills the "Start on WhatsApp" button so a first-time visitor opts in without having to be told
+the code. Sandbox codes are rotated by Twilio — if the CTA stops working, this is the first thing
+to re-check.
 
 ### 4. API keys
 
