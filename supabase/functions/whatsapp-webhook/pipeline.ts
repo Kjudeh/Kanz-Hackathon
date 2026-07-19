@@ -3,7 +3,7 @@
 
 import {
   getAdminClient, getOrCreateProfile, getRecentHistory,
-  logConversation, mergeProfile, setUserState, updateProfile, upsertUser,
+  logConversation, markDelivery, mergeProfile, setUserState, updateProfile, upsertUser,
 } from "./db.ts";
 import { downloadTwilioMedia, sendWhatsApp } from "./twilio.ts";
 import { transcribeAudio } from "./groq.ts";
@@ -55,10 +55,12 @@ export async function processInbound(
   const merged = mergeProfile(profile, result.profile_updates);
   await updateProfile(supa, profile.id, merged);
 
-  await logConversation(supa, user.id, "outbound", "text", result.reply_ar);
+  // Logged as 'pending'; deliverReply resolves it to 'sent' or 'failed' so a
+  // send that Twilio rejects can never look like a delivered message.
+  const turnId = await logConversation(supa, user.id, "outbound", "text", result.reply_ar);
 
   // Deliver BEFORE triggering CV generation, so a CV failure can never block the reply.
-  if (!opts.returnReply) await deliverReply(supa, inbound.from, user.id, result.reply_ar);
+  if (!opts.returnReply) await deliverReply(supa, inbound.from, user.id, result.reply_ar, turnId);
 
   if (result.profile_complete && user.state === "interviewing") {
     await setUserState(supa, user.id, "profile_complete");
@@ -73,13 +75,13 @@ export async function processInbound(
 // experience. Voice failures never block the text reply.
 async function deliverReply(
   supa: SupabaseClient, to: string, userId: string, text: string,
+  turnId: string | null = null,
 ): Promise<void> {
-  // Text first, and never let a send error abort the rest of the pipeline.
-  try {
-    await sendWhatsApp(to, text);
-  } catch (e) {
-    console.error("[send text]", e);
-  }
+  // Text first, and never let a send error abort the rest of the pipeline —
+  // but always record the outcome against the logged turn.
+  const sent = await sendWhatsApp(to, text);
+  await markDelivery(supa, turnId, sent);
+  if (!sent.ok) console.error("[send text] delivery failed:", sent.error);
 
   if (!voiceRepliesEnabled()) return;
   try {

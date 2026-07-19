@@ -75,8 +75,15 @@ async function generateAndSend(userId: string): Promise<void> {
   const cvUrl = signed.data?.signedUrl ?? undefined;
 
   const caption = "سيرتك الذاتية جاهزة! ✅ مبروك عليك — هذي سيرتك بالعربي والإنجليزي، جاهزة ترسلها لأي شغل. بالتوفيق 🌟";
-  await sendWhatsApp(user.whatsapp_number, caption, cvUrl);
+  const sent = await sendWhatsApp(user.whatsapp_number, caption, cvUrl);
+
+  // The CV is rendered and stored either way, but the user has only actually
+  // received it if Twilio accepted the message. Do NOT advance to cv_sent on a
+  // failed delivery — that would report success for a CV nobody ever got.
+  if (!sent.ok) {
+    throw new Error(`CV rendered and stored at ${path} but delivery failed — ${sent.error}`);
+  }
 
   await setUserState(supa, userId, "cv_sent");
-  console.log(`[generate-cv] delivered CV for user ${userId} at ${path}`);
+  console.log(`[generate-cv] delivered CV for user ${userId} at ${path} (sid ${sent.sid})`);
 }

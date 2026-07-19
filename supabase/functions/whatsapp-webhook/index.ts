@@ -10,6 +10,7 @@
 import { getEnv } from "./env.ts";
 import { parseTwilioForm, validateTwilioSignature, sendWhatsApp } from "./twilio.ts";
 import { processInbound } from "./pipeline.ts";
+import { getAdminClient } from "./db.ts";
 import { callClaude } from "./anthropic.ts";
 
 declare const EdgeRuntime:
@@ -54,12 +55,30 @@ Deno.serve(async (req: Request) => {
       // Live outbound test: &sendto=whatsapp:+<number>
       const sendto = url.searchParams.get("sendto");
       if (sendto) {
-        try {
-          await sendWhatsApp(sendto, "Naatiq test message ✅");
-          result.twilio_send = "OK (sent to " + sendto + ")";
-        } catch (e) {
-          result.twilio_send = "ERROR: " + (e instanceof Error ? e.message : String(e));
-        }
+        const sent = await sendWhatsApp(sendto, "Naatiq test message ✅");
+        result.twilio_send = sent.ok
+          ? "OK (sent to " + sendto + (sent.sid ? ", sid " + sent.sid : "") + ")"
+          : "ERROR: " + sent.error;
+      }
+
+      // Recent delivery failures — the fastest way to tell "the agent is broken"
+      // apart from "the agent is fine but Twilio is refusing to deliver".
+      try {
+        const supa = getAdminClient();
+        const { data } = await supa
+          .from("conversations")
+          .select("created_at,delivery_detail")
+          .eq("delivery_status", "failed")
+          .order("created_at", { ascending: false })
+          .limit(3);
+        result.recent_delivery_failures = (data ?? []).length === 0
+          ? "none"
+          : (data ?? []).map((r: { created_at: string; delivery_detail: string }) =>
+            `${r.created_at}: ${r.delivery_detail}`
+          );
+      } catch (e) {
+        result.recent_delivery_failures = "lookup failed: " +
+          (e instanceof Error ? e.message : String(e));
       }
 
       return new Response(JSON.stringify(result, null, 2), {

@@ -72,10 +72,27 @@ reading code.
 | `security_definer_view` | — | Supabase advisor | Views missing `security_invoker = true` |
 | Dashboard "failed to fetch" | Demo data shown | User report | Key and view configuration |
 | No CV link on dashboard | User report | User report | `cv_pdf_path` not exposed in the view |
+| Twilio 63038 daily cap | Replies generated, never delivered | User report → `&sendto=` | Trial account limited to 50 outbound messages/day |
 
 The pattern is worth stating: **the self-test endpoint found four production bugs in minutes each,
 after hours had been spent guessing at a black box.** Building observability was the highest-return
 decision of the project.
+
+### The silent-failure class, and the fix
+
+The Twilio 63038 case exposed something worse than the rate limit itself. Outbound replies were
+written to `conversations` **before** the send was attempted, and send errors were caught and
+logged to a console stream Supabase does not expose. The database, the dashboard and the request
+logs therefore all looked perfectly healthy while **nothing was reaching users**.
+
+Migration `0005_delivery_status.sql` closes this: an outbound turn is written as `pending`, the
+send result is captured, and the row is resolved to `sent` (with the Twilio SID) or `failed` (with
+the provider's error text). `generate-cv` no longer advances a user to `cv_sent` unless Twilio
+actually accepted the message, and the self-test endpoint surfaces recent failures directly.
+
+The general lesson, and the one worth carrying forward: **never record an outcome before the thing
+that determines it has happened.** A success written optimistically is indistinguishable from a
+real success, which turns a loud failure into a silent one.
 
 ## 5. What has *not* been tested
 

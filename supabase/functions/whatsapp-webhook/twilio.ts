@@ -55,11 +55,27 @@ export async function downloadTwilioMedia(
   return { bytes, contentType };
 }
 
-export async function sendWhatsApp(to: string, body: string, mediaUrl?: string): Promise<void> {
+// The outcome of a send attempt. sendWhatsApp never throws: callers decide what
+// a failure means, and — critically — a failure is always reportable rather than
+// swallowed. A Twilio rejection (rate limit, bad channel, expired session) is a
+// normal operating condition, not an exception.
+export interface SendResult {
+  ok: boolean;
+  sid?: string;
+  status?: number;
+  code?: number;
+  error?: string;
+}
+
+export async function sendWhatsApp(
+  to: string,
+  body: string,
+  mediaUrl?: string,
+): Promise<SendResult> {
   const env = getEnv();
   if (!env.TWILIO_ACCOUNT_SID || !env.TWILIO_AUTH_TOKEN || !env.TWILIO_WHATSAPP_FROM) {
     console.error("[twilio] not configured; would send to", to, "->", body);
-    return;
+    return { ok: false, error: "Twilio not configured" };
   }
   // Twilio requires the whatsapp: prefix on both ends; add it defensively.
   const from = env.TWILIO_WHATSAPP_FROM.startsWith("whatsapp:")
@@ -74,19 +90,45 @@ export async function sendWhatsApp(to: string, body: string, mediaUrl?: string):
   if (body) form.set("Body", body);
   if (mediaUrl) form.set("MediaUrl", mediaUrl);
 
-  const res = await fetch(
-    `https://api.twilio.com/2010-04-01/Accounts/${env.TWILIO_ACCOUNT_SID}/Messages.json`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${auth}`,
-        "content-type": "application/x-www-form-urlencoded",
+  let res: Response;
+  try {
+    res = await fetch(
+      `https://api.twilio.com/2010-04-01/Accounts/${env.TWILIO_ACCOUNT_SID}/Messages.json`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Basic ${auth}`,
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        body: form.toString(),
       },
-      body: form.toString(),
-    },
-  );
-  if (!res.ok) {
-    const t = await res.text();
-    throw new Error(`Twilio send failed ${res.status}: ${t}`);
+    );
+  } catch (e) {
+    // Network-level failure: never reached Twilio at all.
+    const error = e instanceof Error ? e.message : String(e);
+    console.error("[twilio] network error", error);
+    return { ok: false, error };
   }
+
+  const text = await res.text();
+  if (!res.ok) {
+    // Twilio returns a JSON body with a numeric `code` that identifies the
+    // reason precisely (63038 = daily cap, 63007 = bad channel, and so on).
+    let code: number | undefined;
+    let message = text;
+    try {
+      const j = JSON.parse(text);
+      code = typeof j.code === "number" ? j.code : undefined;
+      message = j.message ?? text;
+    } catch { /* keep the raw body */ }
+    const error = `Twilio ${res.status}${code ? ` (${code})` : ""}: ${message}`;
+    console.error("[twilio]", error);
+    return { ok: false, status: res.status, code, error };
+  }
+
+  let sid: string | undefined;
+  try {
+    sid = JSON.parse(text).sid;
+  } catch { /* delivered, SID just unparsed */ }
+  return { ok: true, sid, status: res.status };
 }

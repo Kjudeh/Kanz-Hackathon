@@ -132,6 +132,21 @@ Run `&cvtest=<user_id>`, or invoke `generate-cv` in debug mode and read `steps[]
 are a Gotenberg URL missing its scheme, a Gotenberg instance that has gone to sleep, or a missing
 `cvs` bucket.
 
+**Replies are generated but never arrive — Twilio error 63038.**
+`Account ... exceeded the 50 daily messages limit`. Twilio **trial** accounts cap outbound at 50
+messages per day, and every media message (each delivered CV) counts. The agent will look
+completely healthy — transcription, interview and reply all succeed — while nothing reaches the
+user. The cap resets on Twilio's daily cycle; upgrading the account out of trial removes it. **This
+is a demo-day risk: a heavy morning of testing can silently consume the day's quota.**
+
+To see delivery failures directly:
+
+```sql
+select * from delivery_failures;    -- last 24h, newest first
+```
+
+or hit `?selftest=<secret>`, which reports `recent_delivery_failures` inline.
+
 **Twilio error 63007.**
 `TWILIO_WHATSAPP_FROM` is not a WhatsApp-enabled address. It must be exactly
 `whatsapp:+14155238886`.

@@ -46,13 +46,48 @@ export async function getRecentHistory(supa: SupabaseClient, userId: string, lim
   return (data ?? []).reverse();
 }
 
+// Returns the new row's id so an outbound turn can be marked sent or failed once
+// the provider has actually answered. Inbound turns are recorded as 'n/a' —
+// they arrived by definition.
 export async function logConversation(
   supa: SupabaseClient, userId: string,
   direction: "inbound" | "outbound", medium: "voice" | "text", transcript: string,
+): Promise<string | null> {
+  const { data, error } = await supa
+    .from("conversations")
+    .insert({
+      user_id: userId,
+      direction,
+      medium,
+      transcript,
+      delivery_status: direction === "outbound" ? "pending" : "n/a",
+    })
+    .select("id")
+    .single();
+  if (error) {
+    console.error("[logConversation]", error);
+    return null;
+  }
+  return data?.id ?? null;
+}
+
+// Close the loop on an outbound turn. A row left at 'pending' means the send was
+// never resolved at all, which is itself diagnostic.
+export async function markDelivery(
+  supa: SupabaseClient,
+  conversationId: string | null,
+  result: { ok: boolean; sid?: string; error?: string },
 ) {
+  if (!conversationId) return;
   const { error } = await supa
-    .from("conversations").insert({ user_id: userId, direction, medium, transcript });
-  if (error) console.error("[logConversation]", error);
+    .from("conversations")
+    .update({
+      delivery_status: result.ok ? "sent" : "failed",
+      delivery_detail: result.ok ? null : (result.error ?? "unknown error").slice(0, 500),
+      provider_sid: result.sid ?? null,
+    })
+    .eq("id", conversationId);
+  if (error) console.error("[markDelivery]", error);
 }
 
 export async function updateProfile(supa: SupabaseClient, profileId: string, fields: Record<string, unknown>) {
