@@ -95,7 +95,12 @@
   .chart{background:var(--surface);border-radius:14px;padding:16px;display:flex;
          flex-direction:column;gap:10px}
   .chart h4{font-size:12px;font-weight:600}
-  .bar{height:10px;border-radius:4px;background:var(--blue);min-width:12px}
+  .crow{display:flex;align-items:center;gap:10px}
+  .crow .lbl{flex:0 0 118px;font-size:11px;font-weight:600;color:var(--navy);
+             white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .crow .track{flex:1;min-width:0}
+  .crow .cnt{flex:0 0 16px;font-size:11px;color:var(--muted);text-align:center}
+  .bar{height:10px;border-radius:4px;background:var(--blue);min-width:10px}
 
   /* ---------- how it works ---------- */
   .section{background:var(--page);padding:120px 0}
@@ -297,7 +302,25 @@
   // Rendered immediately so the page never shows an error or an empty state;
   // live values are fetched and overlaid on top.
   const SNAPSHOT = { total_profiles:10, total_cvs:7, people_reached:10, placements:0 };
-  const TRADES = [{role_trade:"سائق", cnt:2},{role_trade:"طاهٍ", cnt:1},{role_trade:"فني", cnt:1}];
+  const TRADES = [{role_trade:"سائقون",cnt:2},{role_trade:"مصممون",cnt:2},
+                  {role_trade:"طهاة",cnt:1},{role_trade:"مهندسون",cnt:1}];
+
+  // Occupations are grouped in the database by canonical_trade() — see
+  // migration 0006 — so "سائق" and "سائق خاص" arrive here as one category.
+  // This only translates the resulting canonical labels for the English view.
+  const TRADE_EN = {
+    "سائقون":"Drivers", "عمال توصيل":"Delivery riders", "طهاة":"Cooks",
+    "عمالة منزلية ورعاية أطفال":"Domestic & childcare", "عمال نظافة":"Cleaners",
+    "كهربائيون":"Electricians", "سبّاكون":"Plumbers",
+    "فنيو تكييف وتبريد":"AC technicians", "نجّارون":"Carpenters",
+    "دهّانون":"Painters", "لحّامون":"Welders", "عمال بناء":"Construction",
+    "فنيو صالونات وتجميل":"Salon & beauty", "خيّاطون":"Tailors",
+    "حراس أمن":"Security guards", "بستانيون ومزارعون":"Gardeners & farmers",
+    "عمال مستودعات":"Warehouse staff", "العاملون في الضيافة":"Hospitality",
+    "الرعاية الصحية":"Healthcare", "مبيعات وتجزئة":"Sales & retail",
+    "محاسبون":"Accountants", "معلمون":"Teachers", "مصممون":"Designers",
+    "تحليل البيانات":"Data analysis", "تقنية المعلومات":"IT", "مهندسون":"Engineers"
+  };
 
   const T = {
     ar:{
@@ -405,14 +428,16 @@
     set("s-cvs", digits(cvs));
     set("s-people", digits(reached));
 
-    // Trade distribution. Widths are the real proportions — when every trade has
-    // the same count the bars are genuinely equal, which is the honest picture.
-    // The trade name is exposed on hover rather than invented into the width.
+    // Trade distribution — labelled, and proportional to the real counts.
     const max = Math.max(...BARS.map(b => b.cnt), 1);
-    document.getElementById("bars").innerHTML = BARS.slice(0,7)
-      .map(b => '<div class="bar" title="' + String(b.role_trade || "").replace(/"/g,"") +
-        '" style="width:' + Math.max(6, Math.round((b.cnt / max) * 100)) +
-        '%;margin-bottom:10px"></div>').join("");
+    document.getElementById("bars").innerHTML = BARS.slice(0,7).map(b => {
+      const ar = String(b.role_trade || "");
+      const name = lang === "en" ? (TRADE_EN[ar] || ar) : ar;
+      const w = Math.max(8, Math.round((b.cnt / max) * 100));
+      return '<div class="crow"><span class="lbl" title="' + name.replace(/"/g,"") + '">' +
+             name + '</span><div class="track"><div class="bar" style="width:' + w +
+             '%"></div></div><span class="cnt num">' + digits(b.cnt) + '</span></div>';
+    }).join("");
 
     // steps — DOM order 01→04; flex direction follows dir, so 01 sits first either way
     document.getElementById("steps").innerHTML = L.steps.map((s, i) =>
