@@ -99,6 +99,7 @@
     </div>
     <div class="navlinks">
       <a class="btn btn-ghost" href="employers.html" id="t-navemp"></a>
+      <a class="btn btn-ghost" href="dashboard.html" id="t-navdash"></a>
       <button class="btn btn-ghost" onclick="toggleLang()" id="t-lang"></button>
     </div>
   </div>
@@ -170,7 +171,7 @@
   const SNAPSHOT = { total_cvs: 1, people_reached: 1, placements: 0 };
 
   const T = {
-    ar: { dir:"rtl", lang:"English", navemp:"للشركات",
+    ar: { dir:"rtl", lang:"English", navemp:"للشركات", navdash:"لوحة الأثر",
       h1:"سيرتك الذاتية… بصوتك",
       lede:"أرسل رسالة صوتية على واتساب، واستلم سيرة ذاتية احترافية بالعربي والإنجليزي. بدون تطبيق، بدون استمارات، وبدون حاجة للقراءة أو الكتابة.",
       cta:"ابدأ الآن على واتساب", wa:"أو راسلنا على",
@@ -186,7 +187,7 @@
       emph:"هل تبحث عن موظفين؟", empp:"تصفّح العاملين المتاحين واطّلع على سيرهم الذاتية الجاهزة، وتواصل معهم عبر ناطق.",
       empbtn:"تصفّح العاملين",
       foot:"ناطق — سِيَر ذاتية صوتية للعاملين الذين يستحقون أن يُسمعوا." },
-    en: { dir:"ltr", lang:"عربي", navemp:"For employers",
+    en: { dir:"ltr", lang:"عربي", navemp:"For employers", navdash:"Impact dashboard",
       h1:"Your CV, in your own voice",
       lede:"Send a voice note on WhatsApp and get a professional CV in Arabic and English. No app to install, no forms, and no reading or typing required.",
       cta:"Start on WhatsApp", wa:"Or message us at",
@@ -218,7 +219,7 @@
     document.documentElement.lang = lang;
     document.getElementById("wrap").setAttribute("dir", L.dir);
     const set = (id,v) => { document.getElementById(id).textContent = v; };
-    set("t-lang", L.lang); set("t-navemp", L.navemp);
+    set("t-lang", L.lang); set("t-navemp", L.navemp); set("t-navdash", L.navdash);
     set("t-h1", L.h1); set("t-lede", L.lede); set("t-cta", L.cta);
     set("t-wa", L.wa); set("t-num", "+" + WHATSAPP_NUMBER);
     set("t-scvs", L.scvs); set("t-sreached", L.sreached); set("t-sjobs", L.sjobs);
