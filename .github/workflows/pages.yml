@@ -1,0 +1,70 @@
+name: Deploy site to GitHub Pages
+
+# Publishes the Naatiq landing page, employer portal and dashboard as one site:
+#   /            landing page      (web/index.html)
+#   /employers/  employer portal   (web/employers.html)
+#   /dashboard/  impact dashboard  (dashboard/index.html)
+#
+# The files in web/ and dashboard/ stay the source of truth and still open
+# correctly from disk — the directory layout and link rewriting happen here.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "web/**"
+      - "dashboard/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assemble the site
+        run: |
+          set -e
+          mkdir -p site/employers site/dashboard
+
+          cp web/index.html            site/index.html
+          cp web/employers.html        site/employers/index.html
+          cp dashboard/index.html      site/dashboard/index.html
+          cp -r dashboard/assets       site/dashboard/assets
+
+          # Rewrite the flat-file links for directory-style URLs.
+          sed -i 's|href="employers\.html"|href="employers/"|g'  site/index.html
+          sed -i 's|href="dashboard\.html"|href="dashboard/"|g'  site/index.html
+          sed -i 's|href="index\.html"|href="../"|g'             site/employers/index.html
+
+          # Serve the files as-is; no Jekyll processing.
+          touch site/.nojekyll
+
+          echo "--- assembled ---"
+          find site -type f | sort
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
