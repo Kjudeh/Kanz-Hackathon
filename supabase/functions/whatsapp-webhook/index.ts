@@ -113,6 +113,7 @@ Deno.serve(async (req: Request) => {
           mediaUrl0: "",
           mediaType0: "",
           messageSid: "test",
+          accountSid: env.TWILIO_ACCOUNT_SID,
         },
         { returnReply: true },
       );

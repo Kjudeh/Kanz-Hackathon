@@ -8,6 +8,10 @@ export interface Inbound {
   mediaUrl0: string;
   mediaType0: string;
   messageSid: string;
+  // The Twilio account that delivered this webhook. If it differs from the
+  // account we send with, inbound and outbound are on different accounts —
+  // which looks like a working agent whose replies are always rejected.
+  accountSid: string;
 }
 
 export interface Employer {

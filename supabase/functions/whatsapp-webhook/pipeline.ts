@@ -60,7 +60,9 @@ export async function processInbound(
   const turnId = await logConversation(supa, user.id, "outbound", "text", result.reply_ar);
 
   // Deliver BEFORE triggering CV generation, so a CV failure can never block the reply.
-  if (!opts.returnReply) await deliverReply(supa, inbound.from, user.id, result.reply_ar, turnId);
+  if (!opts.returnReply) {
+    await deliverReply(supa, inbound.from, user.id, result.reply_ar, turnId, inbound.accountSid);
+  }
 
   if (result.profile_complete && user.state === "interviewing") {
     await setUserState(supa, user.id, "profile_complete");
@@ -76,10 +78,26 @@ export async function processInbound(
 async function deliverReply(
   supa: SupabaseClient, to: string, userId: string, text: string,
   turnId: string | null = null,
+  inboundAccountSid = "",
 ): Promise<void> {
   // Text first, and never let a send error abort the rest of the pipeline —
   // but always record the outcome against the logged turn.
   const sent = await sendWhatsApp(to, text);
+
+  // If the send failed, check whether the message reached us on one Twilio
+  // account while we replied from another. That mismatch produces confusing
+  // provider errors (no session on the sending account), so name it explicitly
+  // rather than leaving it to be inferred.
+  if (!sent.ok && inboundAccountSid) {
+    const ours = getEnv().TWILIO_ACCOUNT_SID;
+    if (ours && inboundAccountSid !== ours) {
+      sent.error = `${sent.error} | ACCOUNT MISMATCH: inbound arrived on ` +
+        `${inboundAccountSid}, replying as ${ours}`;
+    } else {
+      sent.error = `${sent.error} | accounts match (${ours})`;
+    }
+  }
+
   await markDelivery(supa, turnId, sent);
   if (!sent.ok) console.error("[send text] delivery failed:", sent.error);
 

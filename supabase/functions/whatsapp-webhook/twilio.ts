@@ -14,6 +14,7 @@ export function parseTwilioForm(params: URLSearchParams): Inbound {
     mediaUrl0: params.get("MediaUrl0") ?? "",
     mediaType0: params.get("MediaContentType0") ?? "",
     messageSid: params.get("MessageSid") ?? "",
+    accountSid: params.get("AccountSid") ?? "",
   };
 }
 
