@@ -25,12 +25,19 @@ The name means *"articulate"* or *"speaking"*. The product was originally called
 | 09 | **Setup and Runbook** | Deploying from scratch; diagnosing failures |
 | 10 | **Testing and Limitations** | What is proven, how, and everything that is not |
 | 11 | **Demo Script** | Two-minute video and five-minute presentation |
+| 12 | **Build Prompt Log** | Every instruction given during the build, verbatim and in order |
+
+### The three prompt documents, distinguished
+
+They are easy to confuse, so: **05** holds the two prompts that run *in production* every time a
+worker sends a message. **12** holds every prompt the *human* gave to build the system, verbatim.
+**06** is the narrative that connects them — the method, the turning points and the mistakes.
 
 ## Suggested reading paths
 
-**Judges and reviewers:** 01, then 10, then 06. The summary establishes the idea, the testing
-document shows what is genuinely proven rather than claimed, and the build narrative shows the
-working method — including the mistakes.
+**Judges and reviewers:** 01, then 10, then 06 with 12 alongside it. The summary establishes the
+idea, the testing document shows what is genuinely proven rather than claimed, and the build
+narrative plus the raw prompt log show exactly how it was made — including the mistakes.
 
 **Engineers:** 04, then 05, then 09. Architecture, then the prompts that are the actual product,
 then how to run it.

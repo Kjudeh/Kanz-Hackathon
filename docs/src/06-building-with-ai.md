@@ -12,7 +12,8 @@ time a worker sends a message.
 
 ## 2. The prompts that shaped the build, in order
 
-Reproduced verbatim, lightly grouped.
+Reproduced verbatim, lightly grouped. This is a selection chosen to carry the narrative —
+**document 12 holds the complete record**, every prompt in order with what each one produced.
 
 ### Framing and guardrails
 

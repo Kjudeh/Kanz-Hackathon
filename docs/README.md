@@ -21,6 +21,10 @@ Branded PDFs live in [`pdf/`](pdf/). One file per document.
 | 09 | [Setup and Runbook](pdf/09-setup-and-runbook.pdf) | Deploy from scratch; diagnose failures |
 | 10 | [Testing and Limitations](pdf/10-testing-and-limitations.pdf) | What is proven, and what is not |
 | 11 | [Demo Script](pdf/11-demo-script.pdf) | Two-minute video and five-minute presentation |
+| 12 | [Build Prompt Log](pdf/12-build-prompt-log.pdf) | Every instruction given during the build, verbatim and in order |
+
+**On the three prompt documents:** **05** is what runs in production, **12** is what the human
+typed to build it, and **06** is the narrative connecting the two.
 
 ## Other artefacts
 
